@@ -4,6 +4,7 @@ a list of his or her favorite games. The program should allow the
 user to list all game titles, add a game title, and remove a game title.
 
 04062020 added save and load functions 
+04122020 created Album class along with operator overloads
 
 */
 
@@ -11,21 +12,29 @@ user to list all game titles, add a game title, and remove a game title.
 #include <vector>
 #include <string>
 #include <fstream>
+#include "album.h"
 
 using namespace std;
 
-void addAlbum(vector<string>& list);
-void delAlbum(vector<string>& list);
-void printAlbum(const vector<string>& list);
-void saveList(const vector<string>& list);
-void loadList(vector <string>& list);
-int menu();
+void addAlbum(vector<Album>& list);
+void delAlbum(vector<Album>& list);
+void printAlbum(const vector<Album>& list);
+void saveList(const vector<Album>& list);
+void loadList(vector <Album>& list);
+char menu();
 
 int main()
 {
 
-    vector<std::string> albumList;
-    int menuChoice = 1;
+    vector<Album> albumList;
+    char menuChoice = 1;
+
+    if (albumList.empty())
+    {
+        loadList(albumList);
+        cout << "*********************\n";
+    }
+    
     cout << "\tWelcome to the Album Program\n\n";
     
     do
@@ -33,46 +42,53 @@ int main()
         menuChoice = menu();
         switch (menuChoice)
         {
-        case 1:
+        case '1':
             addAlbum(albumList);
             break;
-        case 2:
+        case '2':
             delAlbum(albumList);
             break;
-        case 3:
+        case '3':
             printAlbum(albumList);
             break;
-        case 4:
+        case '4':
             saveList(albumList);
             break;
-        case 5:
+        case '5':
             loadList(albumList);
             break;
-        case 0:
+        case '0':
             menuChoice = 0;
             break;
         default:
             cout << "That is not a valid choice\n\n";
             break;
         }
-    } while (menuChoice != 0);
+    } while (menuChoice != '0');
 
     return 0;
 }
 
-void addAlbum(vector<string>& list)
+void addAlbum(vector<Album>& list)
 {
     cin.ignore();
-    string newAlbum;
+    Album newAlbum;
+    char choice = ' ';
     do {
-        cout << "Enter your new album Q to quit: ";
-        getline(cin, newAlbum);
-        if (newAlbum != "Q")
-            list.push_back(newAlbum);
-    } while (newAlbum != "Q");
+        cout << "Enter the name of the album: ";
+        getline(cin, newAlbum.m_Name);
+        cout << "Enter the album Artist: ";
+        getline(cin,newAlbum.m_Artist);
+        cout << "Enter the year it was made: ";
+        getline(cin, newAlbum.m_Year);
+        list.push_back(newAlbum);
+        cout << "\n\nPush any key to enter a new album \"Q\" to quit: ";
+        cin.get(choice);
+    } while (choice != 'Q');
+    cin.ignore();
 }//End addAlbum
 
-void delAlbum(vector<string>& list)
+void delAlbum(vector<Album>& list)
 {
     int albumNumber;
     cout << "\n\nWhich album would you like to delete: ";
@@ -81,53 +97,46 @@ void delAlbum(vector<string>& list)
     printAlbum(list);
 }//End delAlbum
 
-void printAlbum(const vector<string>& list)
-{
-    vector<string>::const_iterator iter;
-    int i = 1;
-
+void printAlbum(const vector<Album>& list){
+    vector<Album>::const_iterator iter;
     cout << "\nDisplay list\n\n";
-    for (iter = list.begin(); iter != list.end(); iter++)
-    {
-        cout << i << ": " << *iter << endl;
+    int i = 1;
+    for(iter=list.begin(); iter != list.end(); iter++){
+        cout << i << ". " << *iter << endl;
         i++;
     }
-    cout << endl;
+    cin.ignore();
 }//End printAlbum
 
-void saveList(const vector<string>& list) {
+void saveList(const vector<Album>& list) {
     ofstream outFile;
-    vector<string>::const_iterator iter;
+    vector<Album>::const_iterator iter;
     outFile.open("cdlist.dat");
-    if (outFile.is_open())
-    {
-        for (iter = list.begin(); iter != list.end(); iter++) {
-            outFile << *iter << endl;
-            }
+    if (outFile.is_open()){
+        for (iter = list.begin(); iter != list.end(); iter++){
+            outFile << *iter;        
+        }
         cout << "Your file is done saving." << endl << endl;
-        outFile.close();
     }
     else
         cout << "File failed to open :(" << endl << endl;
+    cin.ignore();
  }//End saveList
 
-void loadList(vector<string>& list) {
+void loadList(vector<Album>& list) {
     ifstream infile;
-    string album;
-    vector<string>::iterator iter;
+    Album information;
     infile.open("cdlist.dat");
-    if (infile.is_open()){
-        while (getline(infile, album)) {
-             list.push_back(album);           
-        }
-        infile.close();
-    }
-    cout << "You're file is done loading" << endl;
+    while(infile >> information){
+        list.push_back(information);
+    } 
+    cout << "You're file is done loading, push ENTER to continue." << endl;
+    if(cin.eof())
+        cin.ignore();   //Clear the stream
 }//End loadList
 
-int menu()
-{
-    int choice;
+char menu(){
+    char choice;
     cout << "\tPlease select an option:\n\n";
     cout << "1. Add album\n";
     cout << "2. Delete album\n";
@@ -136,6 +145,7 @@ int menu()
     cout << "5. Load list\n";
     cout << "0 to quit\n\n";
     cout << "Please enter your number: ";
-    cin >> choice;
+    cin.get(choice);
     return choice;
 }//End menu
+
